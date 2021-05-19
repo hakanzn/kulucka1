@@ -130,7 +130,7 @@ box-shadow:         0px 2px 1px rgba(50, 50, 50, 0.75);
 <br>
 <script>
 function yenile(){
-    btn.innerText = "Yenileniyor";
+    btn.innerText = "Yenileniyor.";
     xml = new XMLHttpRequest();
     xml.onreadystatechange= function(){
         if (this.readyState == 4 && this.status == 200){
