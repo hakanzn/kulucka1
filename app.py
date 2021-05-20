@@ -152,7 +152,9 @@ function isle(jsn){
     document.getElementById("k1n").innerHTML = "%" + jsn.kulucka1.nem;
     document.getElementById("k2n").innerHTML = "%" + jsn.kulucka2.nem;
     document.getElementById("k3n").innerHTML = "%" + jsn.kulucka3.nem;
-    
+    if(typeof(t)=="undefined"){
+       t = setInterval("yenile", 15);
+    }
     
     
 }
