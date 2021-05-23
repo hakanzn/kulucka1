@@ -1,20 +1,119 @@
 import os
 from flask import Flask
+from flask import request
 import kulucka
 import json
 app = Flask(__name__)
 
 @app.route('/ajax',methods = ['POST', 'GET'])
 def ajax():
-    k1s = kulucka.kulucka().sonuc
+    klc = kulucka.kulucka()
+    klc.baglan()
+    klc.main()
+    k1s = klc.sonuc
+    
     print(json.dumps(k1s))
     return json.dumps(k1s)
+#lamba yak
+@app.route('/ajax2',methods = ['POST', 'GET'])
+def ajax2():
+    btn = request.args.get("btn")
+    btn = btn.split(",")
+    lst = [0,0,0,0]
+    for key, val in enumerate(btn):
+        if val == "false":
+            lst[key] = "0"
+        else:
+            lst[key] = "1"
+    
+    value = 0
 
+    for i in range(len(lst)):
+        digit = lst.pop()
+        if digit == '1':
+            value = value + pow(2, i)
+    
+    klc = kulucka.kulucka()
+    klc.port = 503
+    klc.baglan()
+    
+    klc.c.write_single_register(0, value)
+    sonuc = klc.c.read_holding_registers(0, 1)[0]
+    klc.c.close()
+    print(sonuc)
+    return str(sonuc)
+    
+@app.route('/testplc' ,methods = ['POST', 'GET'])
+def testplc():
+    return """<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    
+
+</head>
+<style>
+.button {color: rgb(230, 230, 230);
+font-size: 20px;
+padding: 20px;
+text-shadow: 0px -1px 0px rgba(30, 30, 30, 0.8);
+-webkit-border-radius: 30px;
+-moz-border-radius: 30px;
+border-radius: 30px;
+background: rgb(210, 20, 20);
+background: -moz-linear-gradient(90deg, rgb(210, 20, 20) 30%, rgb(250, 20, 20) 70%);
+background: -webkit-linear-gradient(90deg, rgb(210, 20, 20) 30%, rgb(250, 20, 20) 70%);
+background: -o-linear-gradient(90deg, rgb(210, 20, 20) 30%, rgb(250, 20, 20) 70%);
+background: -ms-linear-gradient(90deg, rgb(210, 20, 20) 30%, rgb(250, 20, 20) 70%);
+background: linear-gradient(0deg, rgb(210, 20, 20) 30%, rgb(250, 20, 20) 70%);
+-webkit-box-shadow: 0px 2px 1px rgba(50, 50, 50, 0.75);
+-moz-box-shadow:    0px 2px 1px rgba(50, 50, 50, 0.75);
+box-shadow:         0px 2px 1px rgba(50, 50, 50, 0.75);
+}
+</style>
+
+<body>
+
+<script>
+btns = [false, false, false, false];
+
+
+function renk_yazi(btn){
+    btn.innerHTML = (btn.innerHTML.search("OFF") > -1) ? btn.innerHTML.replace("OFF", "ON") :
+    btn.innerHTML.replace("ON", "OFF");
+    if (btn.innerHTML.search("ON") > -1) {btn.setAttribute("style", "background:rgba(0, 0, 0, 0) linear-gradient(0deg, rgb(210, 20, 20) 30%, rgb(250, 20, 20) 70%) repeat scroll 0% 0% / auto padding-box border-box");}
+    else {btn.setAttribute("style", "background:rgba(0, 0, 0, 0) linear-gradient(0deg, rgb(21, 200, 20) 30%, rgb(25, 200, 20) 70%) repeat scroll 0% 0% / auto padding-box border-box");}
+}
+function yaksondur(btn){
+    navigator.vibrate(100);
+    renk_yazi(btn);
+    btn_no = btn.innerHTML.split(" ")[1].split(" ")[0];
+    if (btns[parseInt(btn_no)-1] == false) {btns[parseInt(btn_no)-1] = true;}
+    else {btns[parseInt(btn_no)-1] = false;}
+    xml = new XMLHttpRequest();
+    xml.onreadystatechange= function(){
+        if (this.readyState == 4 && this.status == 200){
+            jsn = xml.responseText;
+            isle(jsn);
+        }
+    };
+    xml.open("GET", "/ajax2?btn=" + btns.toString(), true);
+    xml.send();
+    
+    
+}
+
+</script>
+<button id="btn1" onclick = yaksondur(this) class="button">Lamba 1 ON</button>
+<button id="btn2" onclick = yaksondur(this) class="button">Lamba 2 ON</button>
+<button id="btn3" onclick = yaksondur(this) class="button">Lamba 3 ON</button>
+<button id="btn4" onclick = yaksondur(this) class="button">Lamba 4 ON</button>
+</body></html>"""
 @app.route('/')
 def hello():
     return """<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
+    
 
 </head>
 <style>
@@ -130,7 +229,7 @@ box-shadow:         0px 2px 1px rgba(50, 50, 50, 0.75);
 <br>
 <script>
 function yenile(){
-    btn.innerText = "Yenileniyor.";
+    btn.innerText = "Yenileniyor";
     xml = new XMLHttpRequest();
     xml.onreadystatechange= function(){
         if (this.readyState == 4 && this.status == 200){
@@ -152,9 +251,7 @@ function isle(jsn){
     document.getElementById("k1n").innerHTML = "%" + jsn.kulucka1.nem;
     document.getElementById("k2n").innerHTML = "%" + jsn.kulucka2.nem;
     document.getElementById("k3n").innerHTML = "%" + jsn.kulucka3.nem;
-    if(typeof(t)=="undefined"){
-       t = setInterval("yenile()", 15000);
-    }
+    if(typeof(t) == "undefined") t = setInterval("yenile()", 15000);
     
     
 }

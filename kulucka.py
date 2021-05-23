@@ -10,11 +10,11 @@ class kulucka:
 		self.timeout = 2000
 		self.c = None
 		self.sonuc = {}
-		self.baglan()
+		
 		
 	def baglan(self):
 		self.c = ModbusClient(host=self.host, unit_id=1,timeout=self.timeout,auto_open=True, auto_close=True,port=self.port)
-		self.main()
+		
 		
 	def main(self):
 		self.c.open()
