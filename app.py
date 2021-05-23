@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask import request
 import kulucka
+import time
 import json
 app = Flask(__name__)
 
@@ -17,30 +18,35 @@ def ajax():
 #lamba yak
 @app.route('/ajax2',methods = ['POST', 'GET'])
 def ajax2():
-    btn = request.args.get("btn")
-    btn = btn.split(",")
-    lst = [0,0,0,0]
-    for key, val in enumerate(btn):
-        if val == "false":
-            lst[key] = "0"
-        else:
-            lst[key] = "1"
-    
-    value = 0
-
-    for i in range(len(lst)):
-        digit = lst.pop()
-        if digit == '1':
-            value = value + pow(2, i)
     
     klc = kulucka.kulucka()
     klc.port = 503
     klc.baglan()
     
-    klc.c.write_single_register(0, value)
+    btn = request.args.get("btn")
+    if btn:
+        btn = btn.split(",")
+        lst = [0,0,0,0]
+        for key, val in enumerate(btn):
+            if val == "false":
+                lst[key] = "0"
+            else:
+                lst[key] = "1"
+        
+        value = 0
+
+        for i in range(len(lst)):
+            digit = lst.pop()
+            if digit == '1':
+                value = value + pow(2, i)
+        klc.c.write_single_register(0, value)
+        time.sleep(.1)
+    
+    
+    
     sonuc = klc.c.read_holding_registers(0, 1)[0]
     klc.c.close()
-    print(sonuc)
+    #print(sonuc)
     return str(sonuc)
     
 @app.route('/testplc' ,methods = ['POST', 'GET'])
@@ -74,8 +80,43 @@ box-shadow:         0px 2px 1px rgba(50, 50, 50, 0.75);
 <body>
 
 <script>
-btns = [false, false, false, false];
 
+
+function init(){
+    xml = new XMLHttpRequest();
+    xml.onreadystatechange= function(){
+        if (this.readyState == 4 && this.status == 200){
+            res = xml.responseText;
+            btn_isle(res);
+        }
+    };
+    xml.open("GET", "/ajax2", true);
+    xml.send();
+}
+function btn_isle(res){
+  binary = parseInt(res).toString(2);
+  
+  for(i in binary){
+      
+    if(binary[i] == "1"){
+        btns[i] = true;
+        btnyaz = document.getElementById("btn" + (parseInt(i)+1).toString());
+        btnyaz.innerHTML.replace("OFF", "ON");
+        btnyaz.setAttribute("style", "background:rgba(0, 0, 0, 0) linear-gradient(0deg, rgb(21, 200, 20) 30%, rgb(25, 200, 20) 70%) repeat scroll 0% 0% / auto padding-box border-box");
+        
+        
+    }
+    else{
+        btns[i] = false;
+        btnyaz = document.getElementById("btn" + (parseInt(i)+1).toString());
+        btnyaz.innerHTML.replace("ON", "OFF");
+        btnyaz.setAttribute("style", "background:rgba(0, 0, 0, 0) linear-gradient(0deg, rgb(210, 20, 20) 30%, rgb(250, 20, 20) 70%) repeat scroll 0% 0% / auto padding-box border-box");
+    }
+  }
+
+}
+btns = [false, false, false, false];
+init();
 
 function renk_yazi(btn){
     btn.innerHTML = (btn.innerHTML.search("OFF") > -1) ? btn.innerHTML.replace("OFF", "ON") :
@@ -85,7 +126,7 @@ function renk_yazi(btn){
 }
 function yaksondur(btn){
     navigator.vibrate(100);
-    renk_yazi(btn);
+    //renk_yazi(btn);
     btn_no = btn.innerHTML.split(" ")[1].split(" ")[0];
     if (btns[parseInt(btn_no)-1] == false) {btns[parseInt(btn_no)-1] = true;}
     else {btns[parseInt(btn_no)-1] = false;}
@@ -93,7 +134,7 @@ function yaksondur(btn){
     xml.onreadystatechange= function(){
         if (this.readyState == 4 && this.status == 200){
             jsn = xml.responseText;
-            isle(jsn);
+            btn_isle(jsn);
         }
     };
     xml.open("GET", "/ajax2?btn=" + btns.toString(), true);
